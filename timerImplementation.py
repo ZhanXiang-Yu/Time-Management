@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import ttk
 from PIL import ImageTk, Image
+from tkinter import font
+
 
 import datetime
 import csv
@@ -16,26 +18,19 @@ at the same time, and each has its own waiting period of 1 sec, the counterlogic
 solution: fix later, use local varaible, dont use attributes of the obj(probably)
 """
 
-"""
-csv file for tracked -> cat, item, date(to sec), duration
-logging:
-    get counter duration when finished logging / get date when start logging -> ?
-    get item, cat. when selection finished -> check flag and stringVar for display
-    
-    csv writer with format write
-"""
-
 class TimerClass:
     def __init__(self, parent, itemCatInstance, trackingInstance):
         #associate itemCat class instace to this
         self.itemCat = itemCatInstance
         self.tracking = trackingInstance
         
+        #set font and font size for counter display
+        self.customFont = font.Font(family='Yu Gothic UI', size=90, weight='bold')
         
         #counter display string
         self.counterVal = StringVar()
         #set initial time display format to be 0:0:0
-        self.counterVal.set("0:0:0")
+        self.counterVal.set("00:00:00")
         
         #currtime for logging
         self.now = None
@@ -55,22 +50,21 @@ class TimerClass:
         
         #set layout/geometry
         #timer widget
-        self.timerWidget = ttk.Frame(parent, padding="3 3 12 12")
-        self.timerWidget.grid(row=1, column=2, sticky="ne")
+        self.timerWidget = ttk.Frame(parent)
+        self.timerWidget.pack()
+        
+        #time counting display in timer widget
+        self.counter = ttk.Label(self.timerWidget, textvariable=self.counterVal, font=self.customFont)
+        self.counter.grid(row=0, column=0, columnspan=3, sticky="nsew")
         
         #play/stop button in timer widget, init. load play button
         self.button = ttk.Button(self.timerWidget, image=self.imgL[0], command=self.pressed)
-        self.button.grid(row=0, column=1, sticky="e")
+        self.button.grid(row=1, column=1)
         
-        #time counting display in timer widget
-        self.counter = ttk.Label(self.timerWidget, textvariable=self.counterVal)
-        self.counter.grid(row=0, column=0, padx=30, sticky="w")
+        
         
         #set flags to initially false
         self.pressedFlag.set(False)
-        
-        #trace flags -> set observer for flags with callback func counter
-        #self.pressedFlag.trace_add("write", self.counterLogic)
     
     #setter for pressPlayFlag when button pressed
     def pressed(self):
@@ -109,7 +103,7 @@ class TimerClass:
             #log to csv file
             self.logging()
             
-            self.counterVal.set("0:0:0")
+            self.counterVal.set("00:00:00")
             self.pressedFlag.set(False)
             #print("terminated \n")
             return
@@ -125,7 +119,7 @@ class TimerClass:
                 self.timeMin = 0
                 self.timeHr += 1
             
-            self.counterVal.set(str(self.timeHr) + ":" + str(self.timeMin) + ":" + str(self.timeSec))
+            self.counterVal.set("{hrs:02}:{mins:02}:{secs:02}".format(hrs = self.timeHr, mins = self.timeMin, secs = self.timeSec))
             #print("running \n")
             self.timerWidget.after(1000, self.counterLogic)
 

@@ -8,7 +8,10 @@ import sv_ttk
 import timerImplementation
 import itemCatImplementation
 import trackingImplementation
-#import reportF
+
+import sys, os
+
+os.chdir(sys._MEIPASS)
 
 def main():
     class schedulingApp:
@@ -24,30 +27,38 @@ def main():
             
             #no tearoff
             self.root.option_add('*tearOff', False)
+            
+            self.notebook = ttk.Notebook(self.root)
+            self.notebook.pack(expand=True, fill="both")
 
-            #create a mainframe to make things pretty
-            self.mainframe = ttk.Frame(self.root, padding="3 3 12 12")
-            self.mainframe.grid(column=0, row=0, sticky="nw")
+            #create diff. frames
+            self.timerFrame = ttk.Frame(self.notebook, padding="3 3 12 12")
+            self.itemCatSelectFrame = ttk.Frame(self.notebook)
+            self.trackingFrame = ttk.Frame(self.notebook, padding="3 3 12 12")
+            self.editFrame = ttk.Frame(self.notebook, padding="3 3 12 12")
             
-
-            for col in range(3):
-                self.mainframe.columnconfigure(col, weight=1)
             
-            for row in range(3):
-                self.mainframe.rowconfigure(row, weight=1)
+            #wrap here4
             
-            #wrap here
-            #add item/cat display here
-            self.itemCat = itemCatImplementation.ItemCatClass(self.mainframe)
             
-            #add tracking here
-            self.tracking = trackingImplementation.TrackingClass(self.mainframe)
+            #add item/cat select, edit
+            self.itemCat = itemCatImplementation.ItemCatClass(self.itemCatSelectFrame, self.editFrame)
             
-            #add timer here
-            self.timer = timerImplementation.TimerClass(self.mainframe, self.itemCat, self.tracking)
+            #add tracking 
+            self.tracking = trackingImplementation.TrackingClass(self.trackingFrame)
             
-            #add reporting here
-            #self.reporting = reportF.Report(self.mainframe)
+            #add timer 
+            self.timer = timerImplementation.TimerClass(self.timerFrame, self.itemCat, self.tracking)
+            
+           
+            
+            
+            #add tabs to notebook
+            self.notebook.add(self.timerFrame, text="Timer")
+            self.notebook.add(self.itemCatSelectFrame, text="Selection")
+            self.notebook.add(self.trackingFrame, text="Tracking")
+            self.notebook.add(self.editFrame, text="Edit")
+            
         
     #start app    
     app = schedulingApp()

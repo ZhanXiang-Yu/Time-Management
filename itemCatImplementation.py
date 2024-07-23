@@ -6,14 +6,17 @@ replace all searches to more time-efficeint search algo on sorted lists of dict.
 from tkinter import *
 from tkinter import ttk
 from PIL import ImageTk, Image
+from tkinter import font
+
 
 import csv
 
 
 class ItemCatClass:
-    def __init__(self, parent):
-        #hold parent arg.
-        self.parent = parent
+    def __init__(self, parentItemCat, parentEdit):
+        #hold parentItemCat arg.
+        self.parentItemCat = parentItemCat
+        self.parentEdit = parentEdit
         
         #stringVar for UI in popup
         self.itemUI = StringVar()
@@ -49,13 +52,20 @@ class ItemCatClass:
         #populate lists
         self.read()
         
+        #set font and font size for counter display
+        self.customFont = font.Font(family='Yu Gothic UI', size=20, weight='bold')
+        
+        #overall frame
+        self.allFrame = ttk.Frame(self.parentItemCat)
+        self.allFrame.grid(row=0, column=0, padx=100, pady=100) #pack(expand=True, fill="both")
+        
         #description of curr. selected item/cat for display
         self.itemCatDescription = StringVar()
         self.itemCatDescription.set("item unselected / cat. unselected")
         
         #item/cat frame
-        self.itemCatWidget = ttk.Frame(parent, padding="3 3 12 12")
-        self.itemCatWidget.grid(row=1, column=1, sticky="nw")
+        self.itemCatWidget = ttk.Frame(self.allFrame)
+        self.itemCatWidget.grid(row=0, column=1, padx=(20,0))
         
         #frame for item/item dropdown, and cat/cat dropdown
         self.itemSelect = ttk.Frame(self.itemCatWidget, padding="3 3 12 12")
@@ -65,7 +75,7 @@ class ItemCatClass:
         
         #item description/select widget
         self.itemButton = ttk.Button(self.itemSelect, image=self.itemImg)
-        self.itemButton.grid(row=0, column=0)
+        self.itemButton.grid(row=0, column=0, padx=(0,30))
         #bind to event
         self.itemButton.bind("<ButtonRelease-1>", self.showItems)
         
@@ -81,20 +91,25 @@ class ItemCatClass:
         self.catDropdown = Menu(self.catSelect)
         self.catDropdown.grid_forget()
         
-        self.displayFrame = ttk.Frame(parent, padding="3 3 12 12")
-        self.displayFrame.grid(row=1, column=0, sticky="w", padx=(0,30))
+        #style for display
+        self.style = ttk.Style(self.parentItemCat)
+        self.style.configure("Custom.TLabel", relief="ridge", background="lightgrey")
+        
         #string display widget create
-        self.display = ttk.Label(self.displayFrame, textvariable=self.itemCatDescription)
-        self.display.grid(row=0, column=0, sticky="nw")
+        self.display = ttk.Label(self.allFrame, textvariable=self.itemCatDescription, style="Custom.TLabel", font=self.customFont)
+        self.display.grid(row=0, column=0, padx=0)
+        
+        #config row/column weight
+        self.allFrame.rowconfigure(0, weight=1)
+        self.allFrame.columnconfigure(0, weight=1)
         
         #fill menus
         self.menuFill()
 
-        #create button for edit popup menu
-        self.editSelect = ttk.Frame(self.itemCatWidget, padding="3 3 12 12")
-        self.editSelect.grid(row=0, column=3, sticky="e")
-        self.edit = ttk.Button(self.editSelect, image=self.editImg, command=self.popupCreate)
-        self.edit.pack()
+        #edit frame
+        self.editWidget = ttk.Frame(self.parentEdit)
+        self.editWidget.pack()
+        self.editCreate()
         
         
         #constructor testing
@@ -204,14 +219,9 @@ class ItemCatClass:
         #set boolVar
         self.isItem.set(True)
 
-    def popupCreate(self):
+    def editCreate(self):
         
-        #create popup widget for items/cats. edit
-        editPopup = Toplevel(self.parent)
-        editPopup.title("Edit Item / Cat.")
-        editPopup.geometry("500x400")  # Width x Height
-        
-        treeFrame = ttk.Frame(editPopup)
+        treeFrame = ttk.Frame(self.editWidget)
         treeFrame.grid(row=0, column=0)
         
         # Setup the TreeView
@@ -239,7 +249,7 @@ class ItemCatClass:
         tree.bind("<ButtonRelease-1>", lambda event, tree = tree : self.editPopupFollowing(tree, event))
         
         #addNew label, entry for UI, and button to confirm
-        addNewFrame = ttk.Frame(editPopup)
+        addNewFrame = ttk.Frame(self.editWidget)
         addNewFrame.grid(row=1, column=0, sticky="nsew")
         addNewLabelButton = ttk.Button(addNewFrame, text="Create", command=lambda : self.write(tree))
         addNewItemEntry = ttk.Entry(addNewFrame, textvariable=self.itemUI)
@@ -254,7 +264,7 @@ class ItemCatClass:
         addNewCatLabel.grid(row=1, column=0)
         
         #warning widgets
-        warningFrame = ttk.Frame(editPopup)
+        warningFrame = ttk.Frame(self.editWidget)
         warningFrame.grid(row=3, column=0)
         self.warning.set("")
         
@@ -268,22 +278,23 @@ class ItemCatClass:
         itemData = tree.item(itemID)
         itemFields = itemData["values"]
         
-        #create popup
-        deletePopup = Toplevel(self.parent)
-        deletePopup.geometry("70x70")
-        
-        #create frames for delete
-        
-        deleteFrame = ttk.Frame(deletePopup)
-        
-        
-        deleteFrame.grid(row=2, column=0)
-        
-        
-        #create buttons for delete
-        deleteButton = ttk.Button(deleteFrame, image=self.deleteMark, command=lambda : self.delete(itemFields, itemID, tree, deletePopup))
-        deleteButton.grid(row=0, column=0)
-        #deleteButton.bind("<ButtonRelease-1>", )
+        if(itemID):
+            #create popup
+            deletePopup = Toplevel(self.parentItemCat)
+            deletePopup.geometry("70x70")
+            
+            #create frames for delete
+            
+            deleteFrame = ttk.Frame(deletePopup)
+            
+            
+            deleteFrame.grid(row=2, column=0)
+            
+            
+            #create buttons for delete
+            deleteButton = ttk.Button(deleteFrame, image=self.deleteMark, command=lambda : self.delete(itemFields, itemID, tree, deletePopup))
+            deleteButton.grid(row=0, column=0)
+            #deleteButton.bind("<ButtonRelease-1>", )
         
     def delete(self, itemFields, itemID, tree, popup):
         #search dict for list of items based on key(cat.)
