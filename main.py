@@ -9,9 +9,6 @@ import timerImplementation
 import itemCatImplementation
 import trackingImplementation
 
-import sys, os
-
-os.chdir(sys._MEIPASS)
 
 def main():
     class schedulingApp:
